@@ -1,0 +1,17 @@
+# Local dependencies and build output
+node_modules/
+app/node_modules/
+app/dist/
+
+# Local environment and tool state
+.env
+.env.*
+!.env.example
+app/.env
+app/.env.*
+!app/.env.example
+*.tsbuildinfo
+.vercel/
+
+# Test artifacts
+app/test/e2e_done.png

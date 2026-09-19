@@ -6,7 +6,7 @@ import { distanceM, watchPosition } from './lib/geo';
 import { encode, sha256 } from './lib/image';
 import { allItems, prune, putItem } from './lib/queue';
 import { deliver, flush } from './lib/sender';
-import { CATEGORIES, type Category, type ExifFacts, type Fix, type ObservationPayload, type QueuedItem } from './types';
+import { ACCESSIBILITY, CATEGORIES, FEATURE_TYPES, type AccessibilityStatus, type Category, type DamageVisibility, type ExifFacts, type Fix, type ObservedFeatureType, type ObservationPayload, type QueuedItem } from './types';
 
 /** El flujo entero: abrir → disparar → (mirar dónde y cuándo) → enviar.
  *  Tres pantallas y ningún formulario. La ubicación se vigila desde que la
@@ -33,6 +33,9 @@ interface Draft {
   fixAtCapture: Fix | null; // el mejor fix disponible en ese instante
   exif: ExifFacts;
   category: Category | null;
+  observed_feature_type: ObservedFeatureType;
+  damage_visible: DamageVisibility;
+  accessibility: AccessibilityStatus;
 }
 
 export function App() {
@@ -76,6 +79,7 @@ export function App() {
           full: encoded.full, thumb: encoded.thumb, width: encoded.width, height: encoded.height,
           image_sha256, original_sha256, original_bytes: file.size,
           captured_at, fixAtCapture, exif, category: null,
+          observed_feature_type: 'UNKNOWN', damage_visible: 'UNKNOWN', accessibility: 'UNKNOWN',
         },
       });
     } catch (err) {
@@ -94,6 +98,9 @@ export function App() {
       app_version: APP_VERSION,
       captured_at: draft.captured_at,
       category: draft.category,
+      observed_feature_type: draft.observed_feature_type,
+      damage_visible: draft.damage_visible,
+      accessibility: draft.accessibility,
       device_lon: f?.lon ?? null, device_lat: f?.lat ?? null,
       accuracy_m: f?.accuracy_m ?? null, device_fix_at: f?.at ?? null, heading_deg: f?.heading_deg ?? null,
       exif_lon: draft.exif.lon, exif_lat: draft.exif.lat,
@@ -150,6 +157,9 @@ export function App() {
       {(stage.kind === 'review' || stage.kind === 'sending') && (
         <Review draft={stage.draft} liveFix={fix} sending={stage.kind === 'sending'}
                 onCategory={(c) => setStage({ kind: 'review', draft: { ...stage.draft, category: c } })}
+                onFeature={(v) => setStage({ kind: 'review', draft: { ...stage.draft, observed_feature_type: v } })}
+                onDamage={(v) => setStage({ kind: 'review', draft: { ...stage.draft, damage_visible: v } })}
+                onAccessibility={(v) => setStage({ kind: 'review', draft: { ...stage.draft, accessibility: v } })}
                 onSend={() => send(stage.draft)}
                 onDiscard={() => { URL.revokeObjectURL(stage.draft.previewUrl); setStage({ kind: 'idle' }); }} />
       )}
@@ -191,9 +201,13 @@ function GpsStatus({ fix, error }: { fix: Fix | null; error: string | null }) {
   );
 }
 
-function Review({ draft, liveFix, sending, onCategory, onSend, onDiscard }: {
+function Review({ draft, liveFix, sending, onCategory, onFeature, onDamage, onAccessibility, onSend, onDiscard }: {
   draft: Draft; liveFix: Fix | null; sending: boolean;
-  onCategory: (c: Category | null) => void; onSend: () => void; onDiscard: () => void;
+  onCategory: (c: Category | null) => void;
+  onFeature: (v: ObservedFeatureType) => void;
+  onDamage: (v: DamageVisibility) => void;
+  onAccessibility: (v: AccessibilityStatus) => void;
+  onSend: () => void; onDiscard: () => void;
 }) {
   const f = draft.fixAtCapture ?? liveFix;
   const hasExifGps = draft.exif.lon !== null && draft.exif.lat !== null;
@@ -234,6 +248,31 @@ function Review({ draft, liveFix, sending, onCategory, onSend, onDiscard }: {
           <button key={c.key} className="chip" aria-pressed={draft.category === c.key}
                   onClick={() => onCategory(draft.category === c.key ? null : c.key)}>{c.label}</button>
         ))}
+      </div>
+
+      <div className="observation-fields" aria-label="Observación estructurada">
+        <fieldset>
+          <legend>¿Qué estás observando?</legend>
+          <div className="chips">
+            {FEATURE_TYPES.map((v) => <button type="button" key={v.key} className="chip"
+              aria-pressed={draft.observed_feature_type === v.key} onClick={() => onFeature(v.key)}>{v.label}</button>)}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>¿Hay daño visible?</legend>
+          <div className="chips">
+            {(['YES', 'NO', 'UNKNOWN'] as DamageVisibility[]).map((v) => <button type="button" key={v} className="chip"
+              aria-pressed={draft.damage_visible === v} onClick={() => onDamage(v)}>{v === 'YES' ? 'Sí' : v === 'NO' ? 'No' : 'No sé'}</button>)}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Accesibilidad del lugar</legend>
+          <div className="chips">
+            {ACCESSIBILITY.map((v) => <button type="button" key={v.key} className="chip"
+              aria-pressed={draft.accessibility === v.key} onClick={() => onAccessibility(v.key)}>{v.label}</button>)}
+          </div>
+        </fieldset>
+        <p className="match-note"><span className="dot" /> La entidad urbana se asociará después mediante <b>spatial match</b>. Esta captura queda como observación verificable.</p>
       </div>
 
       <div className="actions">

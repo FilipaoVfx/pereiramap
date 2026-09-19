@@ -91,6 +91,13 @@ header small { color: var(--mute); font-size: 12px; }
   border: 1px solid var(--line); background: var(--panel); border-radius: 999px;
   padding: 7px 12px; font-size: 13px; cursor: pointer;
 }
+.observation-fields { display: grid; gap: 12px; margin-top: 16px; }
+.observation-fields fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; margin: 0; background: rgba(19,24,32,.65); }
+.observation-fields legend { padding: 0 5px; color: var(--ink); font-size: 13px; }
+.observation-fields .chips { margin-top: 2px; }
+.observation-fields .chip { font-size: 12px; }
+.match-note { margin: 0; color: var(--mute); font-size: 12px; display: flex; align-items: flex-start; gap: 8px; }
+.match-note .dot { margin-top: 5px; width: 7px; height: 7px; background: var(--accent); }
 .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(240,180,41,0.08); }
 
 .actions { display: grid; gap: 10px; margin-top: 14px; }

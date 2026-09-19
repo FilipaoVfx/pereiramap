@@ -7,6 +7,9 @@ export interface ObservationPayload {
   app_version: string;
   captured_at: string;
   category: Category | null;
+  observed_feature_type: ObservedFeatureType;
+  damage_visible: DamageVisibility;
+  accessibility: AccessibilityStatus;
   device_lon: number | null;
   device_lat: number | null;
   accuracy_m: number | null;
@@ -24,6 +27,27 @@ export interface ObservationPayload {
   width: number;
   height: number;
 }
+
+/** La captura describe una observación física; el matching con una entidad
+ * urbana se resuelve después y nunca se inventa desde el GPS del teléfono. */
+export type ObservedFeatureType = 'BUILDING' | 'PARCEL' | 'ROAD' | 'PUBLIC_SPACE' | 'UNKNOWN';
+export type DamageVisibility = 'YES' | 'NO' | 'UNKNOWN';
+export type AccessibilityStatus = 'OPEN' | 'RESTRICTED' | 'BLOCKED' | 'UNKNOWN';
+
+export const FEATURE_TYPES: { key: ObservedFeatureType; label: string }[] = [
+  { key: 'BUILDING', label: 'Edificio' },
+  { key: 'PARCEL', label: 'Lote' },
+  { key: 'ROAD', label: 'Vía' },
+  { key: 'PUBLIC_SPACE', label: 'Espacio público' },
+  { key: 'UNKNOWN', label: 'No estoy seguro' },
+];
+
+export const ACCESSIBILITY: { key: AccessibilityStatus; label: string }[] = [
+  { key: 'OPEN', label: 'Accesible' },
+  { key: 'RESTRICTED', label: 'Acceso restringido' },
+  { key: 'BLOCKED', label: 'Bloqueado' },
+  { key: 'UNKNOWN', label: 'No sé' },
+];
 
 export type Category =
   | 'COLAPSO'

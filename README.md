@@ -1,5 +1,9 @@
 # pereiramap — foto de campo para Urban Recovery
 
+El despliegue recomendado es Vercel. La configuración está en
+[`vercel.json`](./vercel.json) y las variables necesarias están documentadas en
+[`DEPLOYMENT.md`](./DEPLOYMENT.md).
+
 Una app de una sola pantalla: **te acercas al lugar afectado, tomas la foto,
 la envías.** Sin cuentas, sin formularios. Cada foto sale con su ubicación y su
 hora, y pasa a ser evidencia visual de un sitio en
@@ -18,17 +22,17 @@ abrir → [●] tomar foto → dónde / cuándo / qué se ve → Enviar → ✓
 | `app/` | La app (Vite + React + TypeScript, ~78 KB comprimidos, sin SDK). PWA instalable. |
 | `supabase/migrations/…_pereiramap_captura.sql` | Esquema `pereiramap` en el proyecto Supabase **compartido con URI**, bucket de fotos, función de envío y vista pública. |
 | `docs/decisiones.md` | Por qué Supabase y no Cloudinary, cómo se resuelve la ubicación, qué se conserva del EXIF, cómo se enlaza con URI. |
-| `docs/PRD.md` | El PRD original (v0.2, Cloudinary + Supabase). Sigue siendo la visión larga; lo construido es el recorte descrito abajo. |
+| `PRD.md` | El PRD vigente: observaciones de campo, provenance, spatial matching y evidencia para el sistema de decisión. |
 | `app/test/e2e_check.py` | Prueba del flujo completo en Chromium con Supabase simulado: la imagen sube **sin EXIF**, el payload lleva las coordenadas y el hash correctos. |
 
 ## Cómo funciona el envío
 
 1. Al abrir, la app pide ubicación y la vigila (`watchPosition`, alta precisión) para que el fix ya exista cuando llegue la foto.
 2. El botón abre la cámara (`<input capture="environment">`). Del archivo se leen **solo** tres cosas del EXIF: coordenadas GPS, hora de captura y rumbo. Después la imagen se re-codifica en un canvas (lado mayor 2048 px) y **pierde todos los metadatos**; se genera una miniatura de 480 px; se calcula el SHA-256 de lo que se sube y del original (que no se sube).
-3. La pantalla de revisión muestra dónde (con ±m), cuándo, si la foto traía GPS y a qué distancia del teléfono, y ocho categorías cerradas opcionales. Sin texto libre.
+3. La pantalla de revisión muestra dónde (con ±m), cuándo, si la foto traía GPS y a qué distancia del teléfono. También registra, sin texto libre, la entidad observada (edificio, lote, vía o espacio público), daño visible y accesibilidad.
 4. Enviar = dos `PUT` al Storage (`<uuid>/full.jpg`, `<uuid>/thumb.jpg`) y una llamada a `pereiramap_enviar(jsonb)`. Todo idempotente por `observation_id`: si la red se corta, el envío queda en IndexedDB y sale solo al volver la señal.
 5. La base resuelve la ubicación con una regla escrita (manual > GPS del teléfono ≤ 100 m > EXIF > GPS impreciso), rechaza lo que cae fuera de la caja de Pereira, pone `received_at` con el reloj del servidor y deja la observación en `PENDIENTE`.
-6. URI la recoge en su pipeline, la enlaza al sitio más cercano (≤ 75 m) y la muestra en la ficha del sitio y en el mapa. Publica solo las `APROBADA` (revisión humana: caras, placas, números de casa); en el visor interno las pendientes se ven con etiqueta.
+6. URI la recoge en su pipeline. La observación queda inicialmente `UNMATCHED`: el backend conserva `spatial_match_status`, método, score y confirmación del operador para asociarla después a edificio, lote, vía o zona. Publica solo las `APROBADA` (revisión humana: caras, placas, números de casa).
 
 ## Correr en local
 
@@ -71,6 +75,6 @@ origen "GitHub Actions" en la configuración del repo.
 
 ## Lo que no hace (a propósito)
 
-- No hay mapa ni pin manual: el esquema ya admite `MANUAL`, la pantalla no. Sin GPS ni EXIF no se puede enviar, y la app lo dice.
+- No hay mapa ni pin manual todavía: el esquema ya admite `MANUAL`, la pantalla no. Sin GPS ni EXIF no se puede enviar, y la app lo dice.
 - No hay video, ni análisis automático, ni incidentes, ni realtime: eso es el PRD largo. Aquí la unidad es una foto y su lugar.
 - No hay cuentas. El freno de abuso es básico (60 envíos por dispositivo y hora, tamaño y tipo de archivo, caja geográfica). Si se abre al público general, va Turnstile o Supabase Auth anónimo delante.
