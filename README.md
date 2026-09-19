@@ -4,9 +4,9 @@ El despliegue recomendado es Vercel. La configuración está en
 [`vercel.json`](./vercel.json) y las variables necesarias están documentadas en
 [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
-Una app de una sola pantalla: **te acercas al lugar afectado, tomas la foto,
-la envías.** Sin cuentas, sin formularios. Cada foto sale con su ubicación y su
-hora, y pasa a ser evidencia visual de un sitio en
+La aplicación combina un dashboard operacional con captura de campo:
+**te acercas al lugar afectado, tomas la foto, la envías.** Cada foto sale con
+su ubicación y su hora, y pasa a ser evidencia visual de un sitio en
 [Urban Recovery Intelligence](https://github.com/FilipaoVfx/rebuild) (URI):
 los datos de recuperación de cada lugar quedan respaldados por lo que se ve
 en el terreno.
@@ -19,11 +19,12 @@ abrir → [●] tomar foto → dónde / cuándo / qué se ve → Enviar → ✓
 
 | Ruta | Qué es |
 |---|---|
-| `app/` | La app (Vite + React + TypeScript, ~78 KB comprimidos, sin SDK). PWA instalable. |
+| `src/` | Aplicación principal (React + TypeScript + Vite): dashboard, mapa y captura. |
+| `app/` | Capturador legacy aislado, conservado para compatibilidad y pruebas offline. |
 | `supabase/migrations/…_pereiramap_captura.sql` | Esquema `pereiramap` en el proyecto Supabase **compartido con URI**, bucket de fotos, función de envío y vista pública. |
 | `docs/decisiones.md` | Por qué Supabase y no Cloudinary, cómo se resuelve la ubicación, qué se conserva del EXIF, cómo se enlaza con URI. |
 | `PRD.md` | El PRD vigente: observaciones de campo, provenance, spatial matching y evidencia para el sistema de decisión. |
-| `app/test/e2e_check.py` | Prueba del flujo completo en Chromium con Supabase simulado: la imagen sube **sin EXIF**, el payload lleva las coordenadas y el hash correctos. |
+| `app/test/e2e_check.py` | Prueba del capturador legacy en Chromium con Supabase simulado. |
 
 ## Cómo funciona el envío
 
@@ -37,12 +38,10 @@ abrir → [●] tomar foto → dónde / cuándo / qué se ve → Enviar → ✓
 ## Correr en local
 
 ```bash
-cd app
-cp .env.example .env.local     # y pon la clave publicable del proyecto
 npm ci
 npm run dev                    # http://localhost:5173 (la cámara exige https o localhost)
 npm run build
-python -m pip install playwright && python test/e2e_check.py   # flujo completo, sin tocar Supabase
+npm run preview
 ```
 
 ## Base de datos
@@ -68,10 +67,10 @@ select pereiramap.revisar('<uuid>', 'RECHAZADA', 'se ve una placa');
 
 ## Publicar
 
-`.github/workflows/pages.yml` construye `app/` y la publica en GitHub Pages
-con `VITE_SUPABASE_URL` y `VITE_SUPABASE_KEY` como *variables* del repositorio
-(la clave es publicable: está hecha para ir en el navegador). Activar Pages con
-origen "GitHub Actions" en la configuración del repo.
+Vercel construye la aplicación raíz mediante `vercel.json`. Define
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+`VITE_CLOUDINARY_CLOUD_NAME` y `VITE_CLOUDINARY_UPLOAD_PRESET` en Preview y
+Production. Consulta [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Lo que no hace (a propósito)
 
