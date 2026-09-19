@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink-950 text-slate-100 antialiased;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3644;
+  border-radius: 8px;
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(11, 15, 20, 0.7) !important;
+  color: #8b97a6 !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: #b7c2ce !important;
+}
+.maplibregl-popup-content {
+  background: #101720 !important;
+  color: #e6edf3 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.maplibregl-popup-tip {
+  border-top-color: #101720 !important;
+  border-bottom-color: #101720 !important;
+}

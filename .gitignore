@@ -1,17 +1,26 @@
-# Local dependencies and build output
+# Root Vite app (the current main application)
 node_modules/
+dist/
+dist-ssr/
+
+# Legacy/mobile capture app under app/
 app/node_modules/
 app/dist/
 
 # Local environment and tool state
+*.local
 .env
 .env.*
 !.env.example
 app/.env
 app/.env.*
 !app/.env.example
-*.tsbuildinfo
 .vercel/
+.DS_Store
+*.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
 
 # Test artifacts
 app/test/e2e_done.png
