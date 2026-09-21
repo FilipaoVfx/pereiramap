@@ -1,7 +1,7 @@
 # PRD — Plataforma de Inteligencia Situacional en Tiempo Real
 
 Versión: 0.2
-Estado: Draft técnico
+Estado: Draft técnico — visión larga. **Lo construido (v0.2 de la app) es el recorte al flujo principal descrito en [`decisiones.md`](decisiones.md) y en el README**; la capa de evidencia es Supabase Storage, no Cloudinary (decisión 1).
 Caso de uso inicial: Emergencia sísmica — Pereira, Colombia
 Objetivo: MVP funcional + arquitectura escalable
 Stack de plataforma: **Cloudinary** (evidencia) + **Supabase** (estado, auth, realtime)
