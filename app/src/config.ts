@@ -2,6 +2,7 @@ export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undef
 export const SUPABASE_KEY = (import.meta.env.VITE_SUPABASE_KEY as string | undefined) ?? '';
 export const BUCKET = 'field-photos';
 export const APP_VERSION = __APP_VERSION__;
+export const BUILD_COMMIT = __BUILD_COMMIT__;
 
 /** Lado mayor de la imagen que se sube y de la miniatura. 2048 px alcanza
  *  para leer una grieta en pantalla y pesa ~0,5 MB; el original se queda en
@@ -21,4 +22,9 @@ export const CONSENT_TEXT =
   'como evidencia de campo en Urban Recovery Intelligence. La foto se sube sin metadatos ' +
   'del dispositivo. No fotografíes personas, placas ni números de casa.';
 
-export const configOk = () => SUPABASE_URL.startsWith('https://') && SUPABASE_KEY.length > 20;
+export const missingConfig = () => [
+  ...(SUPABASE_URL.startsWith('https://') ? [] : ['VITE_SUPABASE_URL']),
+  ...(SUPABASE_KEY.length > 20 ? [] : ['VITE_SUPABASE_KEY']),
+];
+
+export const configOk = () => missingConfig().length === 0;
