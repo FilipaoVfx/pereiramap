@@ -19,8 +19,8 @@ abrir → [●] tomar foto → dónde / cuándo / qué se ve → Enviar → ✓
 
 | Ruta | Qué es |
 |---|---|
-| `src/` | Aplicación principal (React + TypeScript + Vite): dashboard, mapa y captura. |
-| `app/` | Capturador legacy aislado, conservado para compatibilidad y pruebas offline. |
+| `app/` | PWA de producción: captura de campo, cola offline y envío a BrowserX. |
+| `src/` | Dashboard histórico; conserva el modelo `pm_*`, incompatible con el PRD vigente. |
 | `supabase/migrations/…_pereiramap_captura.sql` | Esquema `pereiramap` en el proyecto Supabase **compartido con URI**, bucket de fotos, función de envío y vista pública. |
 | `docs/decisiones.md` | Por qué Supabase y no Cloudinary, cómo se resuelve la ubicación, qué se conserva del EXIF, cómo se enlaza con URI. |
 | `PRD.md` | El PRD vigente: observaciones de campo, provenance, spatial matching y evidencia para el sistema de decisión. |
@@ -38,6 +38,7 @@ abrir → [●] tomar foto → dónde / cuándo / qué se ve → Enviar → ✓
 ## Correr en local
 
 ```bash
+cd app
 npm ci
 npm run dev                    # http://localhost:5173 (la cámara exige https o localhost)
 npm run build
@@ -46,9 +47,16 @@ npm run preview
 
 ## Base de datos
 
-La migración se aplica **una vez** sobre el proyecto Supabase de URI
-(`vhauzajfvlontxziqnaf`), desde el editor SQL del panel o con
-`supabase db push`. Crea:
+Las migraciones se aplican **una vez y en este orden** sobre el proyecto
+Supabase BrowserX de URI (`vhauzajfvlontxziqnaf`), desde el editor SQL del
+panel o con `supabase db push` ya enlazado al proyecto:
+
+1. `20260918120000_pereiramap_captura.sql`
+2. `20260919000000_field_observation.sql`
+
+Antes de publicar, ejecuta `supabase/verify_browserx.sql`: es una consulta de
+solo lectura que confirma el esquema, función, vista, bucket y columnas del
+PRD. Crea:
 
 - esquema `pereiramap` con la tabla `observation`, el trigger `resolver_ubicacion` y la función `revisar(id, estado, nota)`;
 - en `public`, con prefijo: la función `pereiramap_enviar(jsonb)` (lo único que el cliente puede hacer) y la vista `pereiramap_observacion_publica` (lo único que se puede leer: sin `device_id`, sin coordenadas crudas, sin rechazadas);
@@ -67,9 +75,9 @@ select pereiramap.revisar('<uuid>', 'RECHAZADA', 'se ve una placa');
 
 ## Publicar
 
-Vercel construye la aplicación raíz mediante `vercel.json`. Define
-`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-`VITE_CLOUDINARY_CLOUD_NAME` y `VITE_CLOUDINARY_UPLOAD_PRESET` en Preview y
+Vercel construye `app/` mediante `vercel.json`. Define
+`VITE_SUPABASE_URL=https://vhauzajfvlontxziqnaf.supabase.co` y
+`VITE_SUPABASE_KEY` (clave publicable, nunca `service_role`) en Preview y
 Production. Consulta [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Lo que no hace (a propósito)
