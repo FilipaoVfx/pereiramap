@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ACCURACY_WARN_M, APP_VERSION, CONSENT_TEXT, configOk } from './config';
+import { ACCURACY_WARN_M, APP_VERSION, BUILD_COMMIT, CONSENT_TEXT, configOk, missingConfig } from './config';
 import { deviceId } from './lib/device';
 import { readExif } from './lib/exif';
 import { distanceM, watchPosition } from './lib/geo';
@@ -126,7 +126,8 @@ export function App() {
       <div className="app">
         <Header />
         <div className="hero">
-          <p className="err">Falta configurar VITE_SUPABASE_URL y VITE_SUPABASE_KEY (ver .env.example).</p>
+          <p className="err">Falta configurar: {missingConfig().join(' y ')}.</p>
+          <p>Build: {BUILD_COMMIT}. Agrega las variables en el entorno de este deployment y redepliega.</p>
         </div>
       </div>
     );
